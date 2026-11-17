@@ -1,0 +1,8 @@
+# Скрипты и конфиги монтируются в Linux-контейнеры - только LF
+*.sh         text eol=lf
+*.env        text eol=lf
+*.properties text eol=lf
+*.yml        text eol=lf
+*_creds      -text
+*.p12        binary
+

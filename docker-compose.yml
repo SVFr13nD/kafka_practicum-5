@@ -1,0 +1,61 @@
+services:
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.4
+    hostname: zookeeper
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    # порт 2181 наружу не публикуется: ACL хранятся в Zookeeper,
+    # доступ к нему должен быть только у брокеров внутри docker-сети
+
+  kafka-1:
+    image: confluentinc/cp-kafka:7.4.4
+    depends_on:
+      - zookeeper
+    restart: on-failure
+    hostname: kafka-1
+    container_name: kafka-1
+    ports:
+      - "127.0.0.1:9093:9093"
+    env_file:
+      - configs/broker-common.env
+      - configs/kafka-1.env
+    volumes:
+      - ./certs/kafka-1:/etc/kafka/secrets
+      # клиентские сертификаты, конфиги и скрипты - для kafka-topics/kafka-acls/console-клиентов
+      - ./certs/clients:/etc/kafka/clients:ro
+      - ./configs:/etc/kafka/configs:ro
+      - ./scripts:/scripts:ro
+
+  kafka-2:
+    image: confluentinc/cp-kafka:7.4.4
+    depends_on:
+      - zookeeper
+    restart: on-failure
+    hostname: kafka-2
+    container_name: kafka-2
+    ports:
+      - "127.0.0.1:9094:9094"
+    env_file:
+      - configs/broker-common.env
+      - configs/kafka-2.env
+    volumes:
+      - ./certs/kafka-2:/etc/kafka/secrets
+
+  kafka-3:
+    image: confluentinc/cp-kafka:7.4.4
+    depends_on:
+      - zookeeper
+    restart: on-failure
+    hostname: kafka-3
+    container_name: kafka-3
+    ports:
+      - "127.0.0.1:9095:9095"
+    env_file:
+      - configs/broker-common.env
+      - configs/kafka-3.env
+    volumes:
+      - ./certs/kafka-3:/etc/kafka/secrets
+

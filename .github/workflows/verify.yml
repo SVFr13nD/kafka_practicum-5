@@ -1,0 +1,48 @@
+name: Verify SSL and ACL
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['evidence/**']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ssl-verification
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install client
+        run: pip install -r app/requirements.txt
+      - name: Start three SSL brokers and configure ACL
+        run: bash scripts/start.sh
+      - name: Verify producer and consumer permissions
+        run: python scripts/verify.py
+      - name: Collect container state
+        if: always()
+        run: |
+          mkdir -p evidence
+          docker compose ps -a > evidence/containers.txt
+          docker compose logs --no-color > evidence/docker.log 2>&1
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ssl-acl-evidence
+          path: evidence/
+      - name: Publish successful verification
+        run: |
+          printf 'Run: https://github.com/%s/actions/runs/%s\nTested commit: %s\nUTC: %s\n' "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_SHA" "$(date -u +%FT%TZ)" > evidence/run.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add evidence/verification.txt evidence/topics-and-acl.txt evidence/containers.txt evidence/run.txt evidence/*-readiness.txt
+          git commit -m 'docs: record real SSL and ACL verification [skip ci]'
+          git push
+      - name: Stop lab
+        if: always()
+        run: docker compose down -v
