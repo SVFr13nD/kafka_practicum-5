@@ -1,0 +1,16 @@
+PASS: SSL metadata contains 3 brokers
+PASS: topic-1: 3 partitions, replication factor 3, ISR 3
+PASS: topic-2: 3 partitions, replication factor 3, ISR 3
+PRODUCER topic-1 partition=1 offset=0 value=ssl-acl-test-1794891609805873819-1
+PRODUCER topic-2 partition=1 offset=0 value=ssl-acl-test-1794891609805873819-0
+PRODUCER topic-2 partition=0 offset=0 value=ssl-acl-test-1794891609805873819-1
+PRODUCER topic-2 partition=0 offset=1 value=ssl-acl-test-1794891609805873819-2
+PRODUCER topic-1 partition=0 offset=0 value=ssl-acl-test-1794891609805873819-2
+PRODUCER topic-1 partition=2 offset=0 value=ssl-acl-test-1794891609805873819-0
+CONSUMER topic-1 partition=1 offset=0 value=ssl-acl-test-1794891609805873819-1
+CONSUMER topic-1 partition=2 offset=0 value=ssl-acl-test-1794891609805873819-0
+CONSUMER topic-1 partition=0 offset=0 value=ssl-acl-test-1794891609805873819-2
+PASS: consumer reads topic-1
+EXPECTED DENIAL topic-2: KafkaError{code=TOPIC_AUTHORIZATION_FAILED,val=29,str="Subscribed topic not available: topic-2: Broker: Topic authorization failed"}
+PASS: consumer cannot read topic-2
+ALL CHECKS PASSED
